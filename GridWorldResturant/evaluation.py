@@ -12,6 +12,7 @@ def evaluate_agent(Q_table_filename, human_jump, episode_num):
     
     #Make Environment: 
     eval_env = resturantGridWorld(human_jumps=human_jump)
+    eval_env.training_mode = False
     n_obs = eval_env.size 
     n_actions = eval_env.action_space.n
 

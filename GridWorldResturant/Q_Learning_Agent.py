@@ -10,17 +10,17 @@ import random
 
 test_proportions = np.zeros((7,3))
 
-test_proportions[0,:] = [1,0,0] #This is only 1 human jump
+test_proportions[0,:] = [0.1,0.9,1] #10 1, 80% 2, 90% 3 
 test_proportions[1,:] = [0,1,0] #This is only 2 human jump 
 test_proportions[2,:] = [0,0,1] #This is only 3 human jump
 test_proportions[3,:] = [0.1,0,1] #10% 1 90%3 
 test_proportions[4,:] = [0.9,0,1] #90% 1, 10% 3
 test_proportions[5,:] = [0.33,0.66,1] #30% 1, 30% 2, 30% 3
-test_proportions[6,:] = [0.1,0.9,1] #10 1, 80% 2, 90% 3 
-test_proportions[0,:] = [1,0,0] #This is only 1 human jump
+test_proportions[6,:] = [1,0,0] #This is only 1 human jump
 
 
-for i in range(0,6):
+
+for i in range(0,1):
     print("TRAINING SET: ", i)
     occ1, occ2, occ3 = test_proportions[i,:]
 
@@ -29,7 +29,7 @@ for i in range(0,6):
     exp_filename = "Q_Tables/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
     env = resturantGridWorld()
 
-    episodes = 2500
+    episodes = 4000
     exploration_prob = 1 
     min_explore_prob = 0.01 
     exploration_decreasing_decay = 0.999
@@ -77,8 +77,6 @@ for i in range(0,6):
             env._jump_size = 3
     
 
-
-        
         done = False 
         score = 0 
         current_agent_state = 0
@@ -97,7 +95,11 @@ for i in range(0,6):
             if np.random.uniform(0,1)<exploration_prob: 
                 action = env.action_space.sample()
             else: 
-                action = np.argmax(Q_table[:,current_human_state,current_agent_state])
+                if (np.all(Q_table[:,current_human_state,current_agent_state])==0):
+                    action = random.randint(0,n_actions-1)
+                else: 
+                    action = np.argmax(Q_table[:,current_human_state,current_agent_state])
+
 
             #Counting Actions:
             if (action == 0 | action == 1): 
@@ -121,6 +123,9 @@ for i in range(0,6):
             #Updating Q_Table: 
             # Q_table[action, human_state, agent_state] 
 
+
+
+            
             Q = Q_table[action, current_human_state, current_agent_state]
             Q_table[action, current_human_state, current_agent_state] = Q + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q)
 

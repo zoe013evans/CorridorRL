@@ -5,8 +5,8 @@ import gym
 
 # Load environment and Q table
 
-env = resturantGridWorld()
-episodes = 2
+env = resturantGridWorld(render_mode="human")
+episodes = 10
 
 
 for i in range(1,10):

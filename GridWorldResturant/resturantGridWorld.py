@@ -11,6 +11,7 @@ class resturantGridWorld(Env):
     def __init__(self, render_mode=None, size=13, human_jumps=1):
         self.size = size 
         self.window_size = 700
+        self.training_mode = True
 
         #the observation space: 
 
@@ -52,10 +53,16 @@ class resturantGridWorld(Env):
 
     def step(self, action):
 
+        #Setting current location to last location 
         self._agent_last_location = self._agent_location
 
+        #Converting the action to a numerical value to add:
         direction = self._action_to_direction[action]
+
+        #Setting the agents new location, a clipped version of the location + direction 
         self._agent_location = np.clip(self._agent_location + direction, 0, self.size-1)
+
+
 
         # MOVING THE HUMAN: 
         [a,b] = self._agent_location 
@@ -67,7 +74,9 @@ class resturantGridWorld(Env):
             self._human_location = self._human_location
         else: 
             if a > c: 
-                self._human_location = self._human_location + [self._jump_size,0]
+                #self._human_location = self._human_location + [self._jump_size,0]
+                self._human_location = np.clip(self._human_location + [self._jump_size,0], 0, self.size-1)
+
             elif a < c: 
                 self._human_location = self._human_location + [-self._jump_size,0]
             else: 
@@ -175,16 +184,35 @@ class resturantGridWorld(Env):
         super().reset()
         
 
-        #Agent location! 
-        #self._agent_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        #Agent and Human location! 
         self._agent_last_location = [1,0]
-        self._agent_location = np.array([1,0])
-        self._human_location = np.array([0,0])
+
+    
+        #When training: 
+
+        if self.training_mode == True: 
+            n = random.randint(0,self.size-1)
+            m = random.randint(0,self.size-1)
+
+            self._human_location = np.array([n,0])
+            self._agent_location = np.array([m,0])
+        else: 
+            #When testing:
+            self._agent_location = np.array([1,0])
+            self._human_location = np.array([0,0])
+
+        
+
+        #self._agent_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        
+
         self._target_location = np.array([self.size-1,0])
         
         
         observation = self._get_obs()
         info = self._get_info()
+
+        
 
         if self.render_mode == "human":
             self._render_frame()
