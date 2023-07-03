@@ -13,7 +13,7 @@ n_runs = 1000
 #TEST ONE: Evaluating agent on models trained on only one agent: 
 
 
-
+print("1")
 #HUMAN SPEED 1: 
 filename = folder + '1.0_0.0_0.0.csv'
 one_results1 = evaluate_agent(filename,1,n_runs)
@@ -38,9 +38,7 @@ print("2")
 
 #HUMAN SPEED 2: 
 filename = folder + '0.0_1.0_0.0.csv'
-print("1 trained on 2: ")
 two_results1 = evaluate_agent(filename,1,n_runs)
-print("2 trained on 2")
 two_results2 = evaluate_agent(filename, 2, n_runs)
 two_results3 = evaluate_agent(filename,3,n_runs)
 
@@ -53,7 +51,6 @@ print("3")
 filename = folder + '0.0_0.0_1.0.csv'
 three_results1 = evaluate_agent(filename,1,n_runs)
 three_results2 = evaluate_agent(filename, 2, n_runs)
-print("3 trained on 3")
 three_results3 = evaluate_agent(filename,3,n_runs)
 
 nextrow = ['0.0_0.0_1.0',np.mean(three_results1), np.mean(three_results2), np.mean(three_results3)]

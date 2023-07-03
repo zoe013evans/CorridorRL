@@ -20,7 +20,7 @@ test_proportions[6,:] = [1,0,0] #This is only 1 human jump
 
 
 
-for i in range(0,1):
+for i in range(0,6):
     print("TRAINING SET: ", i)
     occ1, occ2, occ3 = test_proportions[i,:]
 
