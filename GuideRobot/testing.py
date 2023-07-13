@@ -1,4 +1,4 @@
-from guideRobot import guideRobot
+from guideRobotEnv import guideRobot
 import numpy as np 
 import gym 
 import matplotlib.pyplot as plt
