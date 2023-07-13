@@ -6,59 +6,69 @@ import pandas as pd
 import pdb 
 import random 
 
-def train(human_f_prop):
 
-    #Gathering the amounts of different humans robot will see: 
-    occ1, occ2, occ3 = human_f_prop 
 
-    #Setting up file name for saving Q_table:
+test_proportions = np.zeros((7,3))
+test_proportions[0,:] = [0.1,0.9,1] #10 1, 80% 2, 90% 3 
+test_proportions[1,:] = [0,1,0] #This is only 2 human jump 
+test_proportions[2,:] = [0,0,1] #This is only 3 human jumppandas
+test_proportions[3,:] = [0.1,0,1] #10% 1 90%3 
+test_proportions[4,:] = [0.9,0,1] #90% 1, 10% 3
+test_proportions[5,:] = [0.33,0.66,1] #30% 1, 30% 2, 30% 3
+test_proportions[6,:] = [1,0,0] #This is only 1 human jump
+
+
+
+for i in range(0,7):
+    print("TRAINING SET: ", i)
+    occ1, occ2, occ3 = test_proportions[i,:]
+
+    h_jumps = 3
+
     exp_filename = "Q_Tables/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
-
-    #Creating environment: 
     env = guideRobot()
     env.training_mode = True
 
-    #Setting up parameters:
-    episodes = 100
+    episodes = 15000
     exploration_prob = 1 
     min_explore_prob = 0.01 
     exploration_decreasing_decay = 0.999
     gamma = 0.99
     lr = 0.5
 
-    #Gathering size of observation and actions: 
     n_obs = env.size 
     n_actions = env.action_space.n
 
-
-    #Gathering variables for plotting graphs: 
+    #Variables for plotting 
     #Steps:
     step_counter = 0
     total_step_counter = np.array([0])
+
     #Jumps:
     jumps = np.zeros((episodes,3))
+
     #Episodes:
     episode_counter = np.array([0])
+
     #Q_values: 
     initial_Q_values = np.zeros((episodes, n_actions))
     pen_Q_values = np.zeros((episodes, n_actions))
 
-
-
-
-    #Make a Q table that represents the values of all state action pairs: 
+    #Make a Q table that represents all the states: 
     Q_table = np.zeros((n_actions, n_obs, n_obs))
     explored_states = np.zeros((n_obs,n_obs))
 
 
+
     #Learning 
+
     for episode in range(episodes):
-        print("episode: ", episode)
+        #print("episode: ", episode)
 
         obs, info = env.reset()
+
         rand = random.random()
 
-        #Pick which human the robot will see this episode: 
         if (0< rand <= occ1): 
             env._jump_size = 1
         elif(occ1 < rand <=occ2):
@@ -80,6 +90,7 @@ def train(human_f_prop):
 
         while not done: 
 
+
             #Exploration vs Explotation
             if np.random.uniform(0,1)<exploration_prob: 
                 action = env.action_space.sample()
@@ -90,7 +101,7 @@ def train(human_f_prop):
                     action = np.argmax(Q_table[:,current_human_state,current_agent_state])
 
 
-            #Counting Actions for plotting:
+            #Counting Actions:
             if (action == 0 | action == 1): 
                 one = one + 1
             if (action == 2 | action == 3): 
@@ -102,13 +113,19 @@ def train(human_f_prop):
             explored_states[current_human_state,current_agent_state] = 1
             
             
+
             #Taking Step: 
             obs, reward, done, f, info = env.step(action)
             [agent_next_state, filler] = obs.get("agent")
             [human_next_state, filler] = obs.get("human")
 
 
-            #Updating Q_Table:   
+            #Updating Q_Table: 
+            # Q_table[action, human_state, agent_state] 
+
+
+
+            
             Q = Q_table[action, current_human_state, current_agent_state]
             Q_table[action, current_human_state, current_agent_state] = Q + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q)
 
@@ -120,15 +137,21 @@ def train(human_f_prop):
     
             step_counter = step_counter + 1 
 
+
+            #if (step_counter>50):
+            #   done = True
+
+
             new_exploration_prob = exploration_prob * exploration_decreasing_decay
             if new_exploration_prob > min_explore_prob: 
                 exploration_prob = new_exploration_prob
-
-            #Saving final Q_table     
             final_table = Q_table 
 
+
+        
         # Episode has finished
         # Now we plot information: 
+
 
         #Jump per episode: 
         jumps[episode,0] = one
@@ -167,12 +190,11 @@ def train(human_f_prop):
 
     final_table = Q_table
 
+
     #Reshape from 3D to 2D 
     final_save_table = final_table.reshape(final_table.shape[0],-1)
     data = pd.DataFrame(final_save_table)
-    
     #Now, we save our final policy: ;
     data.to_csv(exp_filename,index=None)
 
-   
-
+    
