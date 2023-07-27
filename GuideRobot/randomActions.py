@@ -5,13 +5,8 @@ import gym
 
 # Load environment and Q table
 
-env = resturantGridWorld(render_mode="human")
+env = guideRobot(render_mode="human")
 episodes = 10
-
-
-for i in range(1,10):
-    print(i, ' ', env.observation_space.sample())
-
 
 
 for episode in range(1,episodes):

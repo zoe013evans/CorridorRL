@@ -11,7 +11,7 @@ import random
 def evaluate_agent(Q_table_filename, human_jump, episode_num):
     
     #Make Environment: 
-    eval_env = guideRobot(human_jumps=human_jump)
+    eval_env = guideRobot(human_jumps=human_jump,render_mode="human")
     eval_env.training_mode = False
     n_obs = eval_env.size 
     n_actions = eval_env.action_space.n

@@ -5,11 +5,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pdb 
 import random 
+from GGF_function import utili_GGF, maxmin1_GGF
 
 def train(human_f_prop):
 
     #Gathering the amounts of different humans robot will see: 
     occ1, occ2, occ3 = human_f_prop 
+    print(len(human_f_prop))
 
     #Setting up file name for saving Q_table:
     exp_filename = "Q_Tables/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
@@ -44,11 +46,15 @@ def train(human_f_prop):
     pen_Q_values = np.zeros((episodes, n_actions))
 
 
-
-
     #Make a Q table that represents the values of all state action pairs: 
     Q_table = np.zeros((n_actions, n_obs, n_obs))
     explored_states = np.zeros((n_obs,n_obs))
+
+
+    n_features = len(human_f_prop)
+    Q_MOMDP_table = np.zeros((n_actions, n_obs, n_obs))
+
+
 
 
     #Learning 
@@ -58,14 +64,23 @@ def train(human_f_prop):
         obs, info = env.reset()
         rand = random.random()
 
+        feature = 0
+
+
         #Pick which human the robot will see this episode: 
         if (0< rand <= occ1): 
             env._jump_size = 1
+            feature = 0
         elif(occ1 < rand <=occ2):
             env._jump_size = 2 
+            feature = 1
         elif(occ2 < rand <= occ3):
             env._jump_size = 3
+            feature = 2
     
+
+        
+
 
         done = False 
         score = 0 
@@ -107,10 +122,18 @@ def train(human_f_prop):
             [agent_next_state, filler] = obs.get("agent")
             [human_next_state, filler] = obs.get("human")
 
+            rewards = np.zeros(n_features)
+            rewards[feature] = reward
+
 
             #Updating Q_Table:   
             Q = Q_table[action, current_human_state, current_agent_state]
             Q_table[action, current_human_state, current_agent_state] = Q + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q)
+
+            Q_MOMDP = Q_MOMDP_table[action, current_human_state, current_agent_state] 
+            Q_MOMDP_table[action, current_human_state, current_agent_state] = Q_MOMDP + lr*(utili_GGF(rewards) + gamma*max(Q_MOMDP_table[:,human_next_state, agent_next_state])-Q_MOMDP)
+
+
 
             #Checking if done: 
             if (done == False):
@@ -126,8 +149,14 @@ def train(human_f_prop):
 
             #Saving final Q_table     
             final_table = Q_table 
+            
+            
 
         # Episode has finished
+
+        final_fair_table = Q_MOMDP_table
+       
+
         # Now we plot information: 
 
         #Jump per episode: 
@@ -170,7 +199,7 @@ def train(human_f_prop):
     #Reshape from 3D to 2D 
     final_save_table = final_table.reshape(final_table.shape[0],-1)
     data = pd.DataFrame(final_save_table)
-
+    
 
     states = []
     #easy_Q_table = zeros(n_actions+1,n_obs)
@@ -187,7 +216,7 @@ def train(human_f_prop):
 
 
 
-    df_Q_table = pd.DataFrame({'states': states,
+    df_MOMDP_Fair_table = pd.DataFrame({'states': states,
                         'right 1': actions[:,0],
                         'left 1': actions[:,1],
                         'right 2': actions[:,2],
@@ -195,11 +224,13 @@ def train(human_f_prop):
                         'right 3': actions[:,4],
                         'left 3': actions[:,5]})
 
-    df_Q_table.to_csv("saved_tables/Q_table_original.csv", index=None)
-    
+    df_MOMDP_Fair_table.to_csv("saved_tables/Fair_MOMDP_Q_table.csv", index=None)
+
+
     #Now, we save our final policy: ;
     data.to_csv(exp_filename,index=None)
 
+   
 
-train([1,0,0])
 
+train([0.33,0.66,1])

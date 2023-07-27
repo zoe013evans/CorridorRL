@@ -10,6 +10,7 @@ def train(human_f_prop):
 
     #Gathering the amounts of different humans robot will see: 
     occ1, occ2, occ3 = human_f_prop 
+    print(len(human_f_prop))
 
     #Setting up file name for saving Q_table:
     exp_filename = "Q_Tables/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
@@ -44,11 +45,18 @@ def train(human_f_prop):
     pen_Q_values = np.zeros((episodes, n_actions))
 
 
-
-
     #Make a Q table that represents the values of all state action pairs: 
     Q_table = np.zeros((n_actions, n_obs, n_obs))
     explored_states = np.zeros((n_obs,n_obs))
+
+
+    n_features = len(human_f_prop)
+    Q_table_fair = np.zeros((n_actions,n_obs,n_obs,n_features))
+
+    Q_table_fair2 = np.zeros((n_actions,n_obs,n_obs))
+
+
+
 
 
     #Learning 
@@ -58,14 +66,20 @@ def train(human_f_prop):
         obs, info = env.reset()
         rand = random.random()
 
+        feature = 0
+
         #Pick which human the robot will see this episode: 
         if (0< rand <= occ1): 
             env._jump_size = 1
+            feature = 0
         elif(occ1 < rand <=occ2):
             env._jump_size = 2 
+            feature = 1
         elif(occ2 < rand <= occ3):
             env._jump_size = 3
+            feature = 2
     
+
 
         done = False 
         score = 0 
@@ -84,10 +98,13 @@ def train(human_f_prop):
             if np.random.uniform(0,1)<exploration_prob: 
                 action = env.action_space.sample()
             else: 
-                if (np.all(Q_table[:,current_human_state,current_agent_state])==0):
-                    action = random.randint(0,n_actions-1)
+                #if (np.all(Q_table[:,current_human_state,current_agent_state])==0):
+                    #action = random.randint(0,n_actions-1)
+                if (np.all((Q_table_fair[:,human_next_state, agent_next_state,:]))==0):
+                    action = random.randint(0,n_actions-1) 
                 else: 
-                    action = np.argmax(Q_table[:,current_human_state,current_agent_state])
+                    #action = np.argmax(Q_table[:,current_human_state,current_agent_state])
+                    action = np.argmax(np.sum((Q_table[:,human_next_state, agent_next_state,:])))
 
 
             #Counting Actions for plotting:
@@ -109,8 +126,15 @@ def train(human_f_prop):
 
 
             #Updating Q_Table:   
-            Q = Q_table[action, current_human_state, current_agent_state]
-            Q_table[action, current_human_state, current_agent_state] = Q + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q)
+            #Q = Q_table[action, current_human_state, current_agent_state]
+            #Q_table[action, current_human_state, current_agent_state] = Q + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q)
+
+
+            #Updating Feature Q Table: 
+            Q_fe = Q_table_fair[action, current_human_state, current_agent_state,feature]
+            #Q_table_fair[action, current_human_state, current_agent_state,feature] = Q_fe + lr*(reward + gamma*max(Q_table[:,human_next_state,agent_next_state])-Q_fe)
+
+            Q_table_fair[action, current_human_state, current_agent_state, feature] = Q_fe + lr*(reward + gamma*max((Q_table_fair[:,human_next_state, agent_next_state,feature]))-Q_fe)
 
             #Checking if done: 
             if (done == False):
@@ -126,8 +150,17 @@ def train(human_f_prop):
 
             #Saving final Q_table     
             final_table = Q_table 
+        
 
         # Episode has finished
+
+        final_fair_table = np.zeros((n_actions, n_obs, n_obs))
+
+        for action in range(0,n_actions):
+            for n_obs1 in range(0,n_obs):
+                for n_obs2 in range(0,n_obs):
+                    final_fair_table[action, n_obs1, n_obs2] = np.sum(Q_table_fair[action,n_obs1, n_obs2,:])
+
         # Now we plot information: 
 
         #Jump per episode: 
@@ -171,7 +204,6 @@ def train(human_f_prop):
     final_save_table = final_table.reshape(final_table.shape[0],-1)
     data = pd.DataFrame(final_save_table)
 
-
     states = []
     #easy_Q_table = zeros(n_actions+1,n_obs)
     for n in range(0,n_obs):
@@ -179,15 +211,20 @@ def train(human_f_prop):
             state = (n,n2)
             states.append(state)
 
+            
     actions = np.zeros((len(states),n_actions))
+    actionsf = np.zeros((len(states), n_actions))
     for n in range(0,len(states)):
         h,a = states[n]
         action = final_table[:, h, a]
         actions[n,:] = action
 
+        actionf = final_fair_table[:,h,a]
+        actionsf[n,:] = actionf 
 
 
-    df_Q_table = pd.DataFrame({'states': states,
+
+    df_easy_table = pd.DataFrame({'states': states,
                         'right 1': actions[:,0],
                         'left 1': actions[:,1],
                         'right 2': actions[:,2],
@@ -195,11 +232,38 @@ def train(human_f_prop):
                         'right 3': actions[:,4],
                         'left 3': actions[:,5]})
 
-    df_Q_table.to_csv("saved_tables/Q_table_original.csv", index=None)
+    df_fair_table = pd.DataFrame({'states': states,
+                        'right 1': actionsf[:,0],
+                        'left 1': actionsf[:,1],
+                        'right 2': actionsf[:,2],
+                        'left 2': actionsf[:,3],
+                        'right 3': actionsf[:,4],
+                        'left 3': actionsf[:,5]})
+
+
+    
+    df_easy_table.to_csv("saved_tables/df_Q.csv",index=None)
+    df_fair_table.to_csv("saved_tables/df_Q_F.csv", index=None)
+    
+
+
+
+
+        
+            
+    
     
     #Now, we save our final policy: ;
     data.to_csv(exp_filename,index=None)
 
 
-train([1,0,0])
+    final_fair_table = final_fair_table.reshape(final_fair_table.shape[0],-1)
+    data = pd.DataFrame(final_fair_table)
+    data.to_csv("final_fair_table.csv",index=None)
 
+
+    pdb.set_trace()
+   
+
+
+train([1,0,0])
