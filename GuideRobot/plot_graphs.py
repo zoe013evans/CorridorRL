@@ -7,15 +7,18 @@ import pdb
 
 ## PLOTTING FROM SAVED FILES 
 
+policy = '1.0_0.0_0.0'
+filen = 'saved_tables/step_results' + policy + '.csv'
 
-df = pd.read_csv('saved_tables/step_results.csv')
+df = pd.read_csv(filen)
 df.plot()
 plt.title('Steps per episode')
 plt.show()
 
 
 ## Plot the value function for initial states of episodes 
-df = pd.read_csv('saved_tables/initial_Q_results.csv')
+filen = 'saved_tables/initial_Q_results' + policy + '.csv'
+df = pd.read_csv(filen)
 df.plot()
 plt.title("Value Function from Initial States")
 plt.show()
@@ -37,7 +40,8 @@ plt.show()
 
 
 ## Plot the value function of second to last states over episodes 
-df = pd.read_csv('saved_tables/pen_Q_results.csv')
+filen = 'saved_tables/pen_Q_results' + policy + '.csv'
+df = pd.read_csv(filen)
 df.plot()
 plt.title("Value Function from Penultimate States")
 plt.show()
@@ -56,6 +60,7 @@ plt.title("Value Function from Penultimate States - With Rolling window")
 plt.show()
 
 ## Plot the average size of jumps over time 
+filen = 'saved_tables/jumps_per_episode' + filen + '.csv'
 df = pd.read_csv('saved_tables/jumps_per_episode.csv')
 df.plot()
 plt.title("Average jump per episode")

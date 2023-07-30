@@ -8,7 +8,7 @@ from evaluation import evaluate_agent
 
 
 folder = 'Q_Tables/Q_table'
-n_runs = 5
+n_runs = 50
 
 #TEST ONE: Evaluating agent on models trained on only one agent: 
 

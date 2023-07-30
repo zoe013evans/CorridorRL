@@ -13,7 +13,7 @@ def train(human_f_prop):
     print(len(human_f_prop))
 
     #Setting up file name for saving Q_table:
-    exp_filename = "Q_Tables/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+    exp_filename = "Q_Tables_Fair/Q_table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
 
     #Creating environment: 
     env = guideRobot()
@@ -162,6 +162,8 @@ def train(human_f_prop):
                     final_fair_table[action, n_obs1, n_obs2] = np.sum(Q_table_fair[action,n_obs1, n_obs2,:])
 
         # Now we plot information: 
+
+        
 
         #Jump per episode: 
         jumps[episode,0] = one

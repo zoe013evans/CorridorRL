@@ -19,10 +19,10 @@ def train(human_f_prop):
     env.training_mode = True
 
     #Setting up parameters:
-    episodes = 1000
+    episodes = 50000
     exploration_prob = 1 
     min_explore_prob = 0.01 
-    exploration_decreasing_decay = 0.999
+    exploration_decreasing_decay = 0.99999
     gamma = 0.99
     lr = 0.5
 
@@ -45,7 +45,6 @@ def train(human_f_prop):
 
 
 
-
     #Make a Q table that represents the values of all state action pairs: 
     Q_table = np.zeros((n_actions, n_obs, n_obs))
     explored_states = np.zeros((n_obs,n_obs))
@@ -53,7 +52,6 @@ def train(human_f_prop):
 
     #Learning 
     for episode in range(episodes):
-        print("episode: ", episode)
 
         obs, info = env.reset()
         rand = random.random()
@@ -136,13 +134,15 @@ def train(human_f_prop):
         jumps[episode,2] = three
         data = pd.DataFrame(jumps)
         data.columns = ['one', 'two', 'three']
-        data.to_csv("saved_tables/jumps_per_episode.csv", index=None)
+        filen = "saved_tables/jumps_per_episode" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+        data.to_csv(filen, index=None)
 
 
         #Steps per episode: 
         total_step_counter = np.append(total_step_counter, [step_counter])
         episode_counter = np.append(episode_counter, episode+1)
-        pd.DataFrame(total_step_counter).to_csv("saved_tables/step_results.csv", header=None,index=None)
+        filen = "saved_tables/step_results.csv" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+        pd.DataFrame(total_step_counter).to_csv(filen, header=None,index=None)
 
 
         #Initial State 
@@ -152,7 +152,8 @@ def train(human_f_prop):
         initial_Q_values[episode,:] = initial_state
         data = pd.DataFrame(initial_Q_values)
         data.columns = ['right 1', 'left 1', 'right 2', 'left 2', 'right 3','left 3']
-        data.to_csv("saved_tables/initial_Q_results.csv", index=None)
+        filen = "saved_tables/initial_Q_results" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+        data.to_csv(filen, index=None)
         
         #Final State 
         #When the agent is in state n and the human is in state n-1 
@@ -162,7 +163,8 @@ def train(human_f_prop):
         pen_Q_values[episode, :] = pen_state
         data = pd.DataFrame(pen_Q_values)
         data.columns = ['right 1', 'left 1', 'right 2', 'left 2', 'right 3','left 3']
-        data.to_csv("saved_tables/pen_Q_results.csv", index=None)
+        filen = "saved_tables/pen_Q_results" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+        data.to_csv(filen, index=None)
 
 
     final_table = Q_table
@@ -195,11 +197,13 @@ def train(human_f_prop):
                         'right 3': actions[:,4],
                         'left 3': actions[:,5]})
 
-    df_Q_table.to_csv("saved_tables/Q_table_original.csv", index=None)
+
+    filen = "saved_tables/Q_table_orginal" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
+
+    df_Q_table.to_csv(filen, index=None)
     
     #Now, we save our final policy: ;
     data.to_csv(exp_filename,index=None)
 
 
-train([1,0,0])
 

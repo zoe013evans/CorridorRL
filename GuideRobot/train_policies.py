@@ -20,5 +20,5 @@ test_proportions[6,:] = [1,0,0] #This is only 1 human jump
 num_policies = len(test_proportions)
 
 for i in range(0,num_policies):
-    print(i) 
+    print("training policy: ", test_proportions[i,:]) 
     train(test_proportions[i,:])

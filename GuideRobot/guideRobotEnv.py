@@ -8,7 +8,7 @@ import pygame
 class guideRobot(Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode=None, size=13, human_jumps=1):
+    def __init__(self, render_mode=None, size=15, human_jumps=1):
         self.size = size 
         self.window_size = 700
         self.training_mode = True
@@ -192,11 +192,20 @@ class guideRobot(Env):
 
         if self.training_mode == True: 
             
-            n = random.randint(0,self.size-1)
-            m = random.randint(0,self.size-1)
             
-            self._human_location = np.array([n,0])
-            self._agent_location = np.array([0,0])
+            m = random.randint(0,10)
+
+            if (m>8):
+                n = random.randint(0,self.size-1)
+                self._human_location = np.array([n,0])
+                self._agent_location = np.array([0,0])
+            else: 
+                self._agent_location = np.array([1,0])
+                self._human_location = np.array([0,0])
+
+
+            
+            
             #print("training: ", self._agent_location, self._human_location)
         else: 
             #When testing:
