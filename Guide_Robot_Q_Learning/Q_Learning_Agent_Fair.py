@@ -45,6 +45,9 @@ def action_selection_argmax(Q_table_fair,current_human_s,current_agent_s,feat,ex
     return action 
 
 
+
+
+
 def save_step_plot(total_step_counter,step_counter,episode,file_name):
     if episode % 1000 == 999:
         total_step_counter = np.append(total_step_counter, step_counter)
@@ -100,6 +103,8 @@ def save_final_Q_table(Q_table,exp_filename):
     data = pd.DataFrame(final_save_table)
     data.to_csv(exp_filename,index=None)
 
+
+
 def Q_fair_2_Q_normal(Q_table_fair, env, n_features, occ1, occ2, occ3):
     #How we convert a Q table that includes features into a Q table that is standard 
     n_obs = env.size 
@@ -131,6 +136,8 @@ def Q_fair_2_Q_normal(Q_table_fair, env, n_features, occ1, occ2, occ3):
                 for n_obs2 in range(0,n_obs): 
                     Q_table[action,n_obs1,n_obs2] = occ1*Q_table_fair[action,n_obs1,n_obs2,0] + occ2*Q_table_fair[action,n_obs1,n_obs2,1] + occ3*Q_table_fair[action,n_obs1,n_obs2,2]
     return Q_table
+
+
 
 
 def Q_fair_2_Q_normal_minmax(Q_table_fair, env, n_features, debug_file_name):
@@ -172,6 +179,76 @@ def Q_fair_2_Q_normal_minmax(Q_table_fair, env, n_features, debug_file_name):
             final_fair_table_minimax[:,s_h,s_a] = min_action_values
 
     return final_fair_table_minimax
+
+
+
+def Q_fair_2_Q_leximin(Q_table_fair, env, n_features,debug_file_name):    
+    n_obs = env.size 
+    n_actions = env.action_space.n  
+  
+    weights = [100, 10, 1]
+    Q_table = np.zeros((n_actions,n_obs,n_obs))
+
+    for n_obs1 in range(0,n_obs):
+        for n_obs2 in range(0,n_obs):
+
+            s_h = n_obs1
+            s_a = n_obs2
+            dump2textfile = []
+
+            state_st = str((s_h,s_a))
+            Action_values_f0 = Q_table_fair[:,s_h,s_a,0]
+            Action_values_f1 = Q_table_fair[:,s_h,s_a,1]
+            Action_values_f2 = Q_table_fair[:,s_h,s_a,2]
+
+            st_a0 = "Action_values_f0: " + str(Action_values_f0)
+            st_a1 = "Action_values_f1: " + str(Action_values_f1)
+            st_a2 = "Action_values_f2: " + str(Action_values_f2)
+
+            st_weights = 'Weights: '+ str(weights)
+
+
+            action_weights = np.zeros((3,n_actions))
+
+
+            for action in range(0,n_actions):
+
+                feature_actions = [Q_table_fair[action,n_obs1,n_obs2,0], Q_table_fair[action,n_obs1,n_obs2,1], Q_table_fair[action,n_obs1,n_obs2,2]]
+                feature_actions = np.sort(feature_actions)
+
+                Q_table[action,n_obs1,n_obs2] = np.sum((np.multiply(feature_actions,weights)))
+
+
+            st_lexi = "Final Values: " + str(Q_table[:,n_obs1,n_obs2])
+
+
+            to_file = [state_st,st_a0,st_a1,st_a2,st_weights,st_lexi]
+
+            with open(debug_file_name,'a') as f: 
+                f.write('\n'.join(to_file))
+                f.write('\n')
+                f.write(' ')
+                f.write('\n')
+
+
+
+               
+                
+    '''
+    
+    for action in range(0,n_actions):
+            for n_obs1 in range(0,n_obs):
+                for n_obs2 in range(0,n_obs): 
+                    feature_actions = [Q_table_fair[action,n_obs1,n_obs2,0], Q_table_fair[action,n_obs1,n_obs2,1], Q_table_fair[action,n_obs1,n_obs2,2]]
+                    feature_actions = np.sort(feature_actions)
+                    Q_table[action,n_obs1,n_obs2] = np.sum((np.multiply(feature_actions,weights)))
+
+    '''
+    return Q_table
+
+
+
+
 
 def Q_table_2_readable_csv(final_table, env, path_name):
     n_obs = env.size
@@ -220,7 +297,7 @@ def Fair_train(human_f_prop,fair_type):
     env.training_mode = True
 
     #Setting up parameters:
-    episodes = 300000
+    episodes = 500000
     exploration_prob = 1 
     min_explore_prob = 0.01 
     exploration_decreasing_decay = 0.9999
@@ -308,8 +385,6 @@ def Fair_train(human_f_prop,fair_type):
                 current_human_state = human_next_state
 
     
-    
-
             new_exploration_prob = exploration_prob * exploration_decreasing_decay
             if new_exploration_prob > min_explore_prob: 
                 exploration_prob = new_exploration_prob
@@ -327,6 +402,10 @@ def Fair_train(human_f_prop,fair_type):
     elif(fair_type == "Minmax"): 
         debug_name = str(occ1) + '_' + str(occ2) + '_' + str(occ3) + '_debug.csv'
         final_table = Q_fair_2_Q_normal_minmax(Q_table_fair, env, n_features,debug_name)
+    elif(fair_type == "Leximin"):
+        debug_name = str(occ1) + '_' + str(occ2) + '_' + str(occ3) + '_leximin_debug.csv'
+
+        final_table = Q_fair_2_Q_leximin(Q_table_fair, env, n_features,debug_name)
     
 
     path_name = "Clear_Q_tables/Q_Learning_" + fair_type + "/Q_Table" + str(occ1) + "_" + str(occ2) + "_" + str(occ3) + ".csv"
@@ -336,20 +415,23 @@ def Fair_train(human_f_prop,fair_type):
     #Reshape from 3D to 2D 
     save_final_Q_table(final_table,exp_filename)
    
+
+
+fair_type = "Leximin"   
 print("train: 1,0,0")
-Fair_train([1,0,0],"Minmax") 
+Fair_train([1,0,0],fair_type) 
 print("train: 0.1,0.9,1")
-Fair_train([0.1,0.9,1], "Minmax") #10 1, 80% 2, 90% 3  """
+Fair_train([0.1,0.9,1], fair_type) #10 1, 80% 2, 90% 3  """
 print("train: 0,1,0")
-Fair_train([0,1,0], "Minmax") #This is only 2 human jump 
+Fair_train([0,1,0], fair_type) #This is only 2 human jump 
 print("train: 0,0,1")
-Fair_train([0,0,1], "Minmax") #This is only 3 human jumppandas
+Fair_train([0,0,1], fair_type) #This is only 3 human jumppandas
 print("train: 0.1,0,1")
-Fair_train([0.1,0,1], "Minmax") #10% 1 90%3 
+Fair_train([0.1,0,1], fair_type) #10% 1 90%3 
 print("train: 0.9,0,1")
-Fair_train([0.9,0,1], "Minmax") #90% 1, 10% 3
+Fair_train([0.9,0,1], fair_type) #90% 1, 10% 3
 print("train: 0.33,0.66,1")
-Fair_train([0.33,0.66,1],"Minmax") #30% 1, 30% 2, 30% 3
+Fair_train([0.33,0.66,1],fair_type) #30% 1, 30% 2, 30% 3
 
 
 

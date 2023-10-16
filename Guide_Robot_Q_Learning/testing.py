@@ -7,8 +7,8 @@ import pdb
 from evaluation import evaluate_agent
 
 
-folder = 'Q_Tables/Q_Learning_Minmax/Q_table_'
-n_runs = 50
+folder = 'Q_Tables/Q_Learning_Leximin/Q_table_'
+n_runs = 3
 
 #TEST ONE: Evaluating agent on models trained on only one agent: 
 
@@ -108,6 +108,7 @@ print("Best for 1: ", one_results1)
 print("Best for 2: ", two_results2)
 print("Best for 3: ", three_results3)
 
+'''
 
 #PLOTTING THE BLOODY THING
 
@@ -191,7 +192,7 @@ df.plot()
 plt.title('Trained on 10% 1, 80% 2, 10% 3 of jumps')
 plt.show()
 
-
+'''
 
 
 # BIG TABLE: 

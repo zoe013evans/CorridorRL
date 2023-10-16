@@ -8,7 +8,7 @@ import pdb
 ## PLOTTING FROM SAVED FILES 
 
 policy = '1_0_0'
-fair_type = 'Original'
+fair_type = 'Leximin'
 file_path = 'saved_tables/Q_Learning_' + fair_type + '/' 
 
 filen = file_path + 'step_results_' + policy + '.csv'
